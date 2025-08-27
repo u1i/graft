@@ -188,21 +188,53 @@ class GraftAPI:
                                 header, data = image_url.split(',', 1)
                                 image_data = base64.b64decode(data)
                                 
-                                filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
+                                # Use custom filename or generate one
+                                if hasattr(self, 'custom_filename') and self.custom_filename and i == 0:
+                                    if self.custom_filename == '-':
+                                        # Output to stdout
+                                        sys.stdout.buffer.write(image_data)
+                                        return f"Image output to stdout"
+                                    else:
+                                        filename = self.custom_filename
+                                else:
+                                    filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
                                 
-                                try:
-                                    with open(filename, 'wb') as f:
-                                        f.write(image_data)
-                                    print(f"✅ Image {i+1} saved successfully: {filename}")
-                                except Exception as e:
-                                    print(f"❌ Failed to save image {i+1}: {e}")
+                                if hasattr(self, 'custom_filename') and self.custom_filename == '-':
+                                    # Already handled above
+                                    pass
+                                else:
+                                    try:
+                                        with open(filename, 'wb') as f:
+                                            f.write(image_data)
+                                        print(f"✅ Image {i+1} saved successfully: {filename}", file=sys.stderr)
+                                    except Exception as e:
+                                        print(f"❌ Failed to save image {i+1}: {e}", file=sys.stderr)
                             else:
                                 # Regular URL - download it
-                                filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
-                                if download_image(image_url, filename):
-                                    print(f"✅ Image {i+1} saved successfully: {filename}")
+                                if hasattr(self, 'custom_filename') and self.custom_filename and i == 0:
+                                    if self.custom_filename == '-':
+                                        # Download to memory and output to stdout
+                                        try:
+                                            response = requests.get(image_url, stream=True, verify=False)
+                                            response.raise_for_status()
+                                            sys.stdout.buffer.write(response.content)
+                                            return f"Image output to stdout"
+                                        except Exception as e:
+                                            print(f"❌ Failed to download image: {e}", file=sys.stderr)
+                                            return None
+                                    else:
+                                        filename = self.custom_filename
                                 else:
-                                    print(f"❌ Failed to download image {i+1} from: {image_url}")
+                                    filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
+                                
+                                if hasattr(self, 'custom_filename') and self.custom_filename == '-':
+                                    # Already handled above
+                                    pass
+                                else:
+                                    if download_image(image_url, filename):
+                                        print(f"✅ Image {i+1} saved successfully: {filename}", file=sys.stderr)
+                                    else:
+                                        print(f"❌ Failed to download image {i+1} from: {image_url}", file=sys.stderr)
                     
                     return f"Generated {len(images)} image(s)"
                 
@@ -433,11 +465,14 @@ Examples:
   echo "A futuristic city" | graft.py
   graft.py -p "Abstract art" -m google/gemini-2.5-flash-image-preview -t 0.8
   graft.py -i bottle.png -p "make the bottle green"
+  graft.py -p "street scene" -o street.png
+  graft.py -p "vintage car" -o - | glimpse -p "what car model is this?"
         """
     )
     
     parser.add_argument('-p', '--prompt', help='Prompt for image generation or editing')
     parser.add_argument('-i', '--image', help='Input image file for editing')
+    parser.add_argument('-o', '--output', help='Output filename (default: auto-generated)')
     parser.add_argument('-m', '--model', help='Override the model specified in config')
     parser.add_argument('-t', '--temperature', type=float, help='Override the temperature setting (0.0-1.0)')
     parser.add_argument(
@@ -520,8 +555,11 @@ Examples:
         # Image from stdin
         input_image_data = stdin_data
     
-    # Generate image
+    # Set custom filename if provided
     api = GraftAPI(config)
+    if args.output:
+        api.custom_filename = args.output
+    
     try:
         result = api.generate_image(prompt_text, input_image_path, input_image_data)
     except FileNotFoundError as e:

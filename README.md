@@ -31,8 +31,6 @@ temperature = 0.4
 
 ## Usage
 
-### Graft - Image Generation & Editing
-
 **Generate new images:**
 ```bash
 python3 graft.py -p "A sunset over mountains"
@@ -53,68 +51,31 @@ curl https://example.com/image.png | python3 graft.py -p "turn it into an orange
 # Override model and temperature
 python3 graft.py -p "Abstract art" -m google/gemini-2.5-flash-image-preview -t 0.8
 
+# Specify output filename
+python3 graft.py -p "street scene" -o street.png
+
+# Output to stdout for piping
+python3 graft.py -p "vintage car" -o - | glimpse -p "what car model is this?"
+
 # List available models
 python3 graft.py --list-models
 ```
 
-### Glean - Text Analysis
-
-**Analyze text:**
-```bash
-python3 glean.py -p "Summarize this text" -f document.txt
-echo "What is AI?" | python3 glean.py
-```
-
-**Advanced features:**
-```bash
-# Override model
-python3 glean.py -p "Analyze sentiment" -f text.txt -m anthropic/claude-3.5-sonnet
-
-# List available models
-python3 glean.py --list-models
-```
-
 ## Features
 
-### Graft (Image Generation)
 - ✅ Generate images from text prompts
 - ✅ Edit existing images with text instructions
 - ✅ Support for file input (`-i image.png`)
 - ✅ Support for piped image data (`curl | graft`)
+- ✅ Custom output filename (`-o filename.png`)
+- ✅ Output to stdout for piping (`-o -`)
 - ✅ Multiple image formats (PNG, JPEG, GIF, WebP, BMP)
 - ✅ Base64 image handling
 - ✅ Automatic filename generation with timestamps
 
-### Glean (Text Analysis)
-- ✅ Text analysis and question answering
-- ✅ File input support
-- ✅ Stdin text processing
-- ✅ Multiple AI models via OpenRouter
-- ✅ Configurable temperature and prompts
-
-## Project Structure
-
-```
-nana-banana/
-├── glean.py          # Text analysis tool
-├── graft.py          # Image generation tool
-├── google.py         # Direct Google AI integration
-├── requirements.txt  # Python dependencies
-├── venv/            # Virtual environment
-├── .gitignore       # Git ignore patterns
-└── README.md        # This documentation
-```
-
 ## Supported Models
 
-**Image Generation (graft.py):**
 - `google/gemini-2.5-flash-image-preview` (default)
 - Other OpenRouter models with image output capability
 
-**Text Analysis (glean.py):**
-- `anthropic/claude-3.5-sonnet` (default)
-- `openai/gpt-4o`
-- `meta-llama/llama-3.1-405b-instruct`
-- Many other OpenRouter models
-
-Use `--list-models` with either tool to see all available options.
+Use `--list-models` to see all available options.
