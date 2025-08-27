@@ -1,12 +1,8 @@
-# Nana Banana
+# Graft
 
-A collection of AI-powered command-line tools for text analysis and image generation using OpenRouter API.
+A command-line tool for AI-powered image generation and editing using OpenRouter API.
 
-## Tools
-
-- **glean.py** - Text analysis and question answering
-- **graft.py** - Image generation and editing  
-- **google.py** - Direct Google AI API integration (experimental)
+Sister projects: [Glean](https://github.com/u1i/glean) (text analysis) and [Glimpse](https://github.com/u1i/glimpse) (image analysis)
 
 ## Installation
 
@@ -24,19 +20,8 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Both tools require OpenRouter API configuration. Create configuration files in your home directory:
+Create `~/.graft_cfg` in your home directory:
 
-### For glean.py (text analysis)
-Create `~/.glean_cfg`:
-```ini
-[openrouter]
-api_key = your_openrouter_api_key_here
-model = anthropic/claude-3.5-sonnet
-temperature = 0.7
-```
-
-### For graft.py (image generation)
-Create `~/.graft_cfg`:
 ```ini
 [openrouter]
 api_key = your_openrouter_api_key_here
