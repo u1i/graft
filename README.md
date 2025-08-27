@@ -60,6 +60,9 @@ python3 graft.py -p "create 3 variations of a street scene" -o street.png
 # Output to stdout for piping (only first image if multiple are generated)
 python3 graft.py -p "vintage car" -o - | glimpse -p "what car model is this?"
 
+# Process multiple prompts from a file (handles prompts with spaces)
+while read p; do graft -p "$p" < /dev/null; done < prompts.txt
+
 # List available models
 python3 graft.py --list-models
 ```
