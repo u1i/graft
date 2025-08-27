@@ -54,7 +54,10 @@ python3 graft.py -p "Abstract art" -m google/gemini-2.5-flash-image-preview -t 0
 # Specify output filename
 python3 graft.py -p "street scene" -o street.png
 
-# Output to stdout for piping
+# Multiple images saved as street.png, street_2.png, street_3.png, etc.
+python3 graft.py -p "create 3 variations of a street scene" -o street.png
+
+# Output to stdout for piping (only first image if multiple are generated)
 python3 graft.py -p "vintage car" -o - | glimpse -p "what car model is this?"
 
 # List available models
@@ -69,6 +72,7 @@ python3 graft.py --list-models
 - ✅ Support for piped image data (`curl | graft`)
 - ✅ Custom output filename (`-o filename.png`)
 - ✅ Output to stdout for piping (`-o -`)
+- ✅ Multiple output images (saved as `image.png`, `image_2.png`, etc.)
 - ✅ Multiple image formats (PNG, JPEG, GIF, WebP, BMP)
 - ✅ Base64 image handling
 - ✅ Automatic filename generation with timestamps

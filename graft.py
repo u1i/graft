@@ -189,13 +189,21 @@ class GraftAPI:
                                 image_data = base64.b64decode(data)
                                 
                                 # Use custom filename or generate one
-                                if hasattr(self, 'custom_filename') and self.custom_filename and i == 0:
+                                if hasattr(self, 'custom_filename') and self.custom_filename:
                                     if self.custom_filename == '-':
-                                        # Output to stdout
-                                        sys.stdout.buffer.write(image_data)
-                                        return f"Image output to stdout"
+                                        if i == 0:  # Only output first image to stdout
+                                            sys.stdout.buffer.write(image_data)
+                                            return f"Image output to stdout"
+                                        else:
+                                            continue  # Skip additional images when outputting to stdout
                                     else:
-                                        filename = self.custom_filename
+                                        # Handle multiple images with custom filename
+                                        if i == 0:
+                                            filename = self.custom_filename
+                                        else:
+                                            # Add suffix for additional images: image.png -> image_2.png, image_3.png
+                                            base, ext = os.path.splitext(self.custom_filename)
+                                            filename = f"{base}_{i+1}{ext}"
                                 else:
                                     filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
                                 
@@ -211,19 +219,27 @@ class GraftAPI:
                                         print(f"❌ Failed to save image {i+1}: {e}", file=sys.stderr)
                             else:
                                 # Regular URL - download it
-                                if hasattr(self, 'custom_filename') and self.custom_filename and i == 0:
+                                if hasattr(self, 'custom_filename') and self.custom_filename:
                                     if self.custom_filename == '-':
-                                        # Download to memory and output to stdout
-                                        try:
-                                            response = requests.get(image_url, stream=True, verify=False)
-                                            response.raise_for_status()
-                                            sys.stdout.buffer.write(response.content)
-                                            return f"Image output to stdout"
-                                        except Exception as e:
-                                            print(f"❌ Failed to download image: {e}", file=sys.stderr)
-                                            return None
+                                        if i == 0:  # Only output first image to stdout
+                                            try:
+                                                response = requests.get(image_url, stream=True, verify=False)
+                                                response.raise_for_status()
+                                                sys.stdout.buffer.write(response.content)
+                                                return f"Image output to stdout"
+                                            except Exception as e:
+                                                print(f"❌ Failed to download image: {e}", file=sys.stderr)
+                                                return None
+                                        else:
+                                            continue  # Skip additional images when outputting to stdout
                                     else:
-                                        filename = self.custom_filename
+                                        # Handle multiple images with custom filename
+                                        if i == 0:
+                                            filename = self.custom_filename
+                                        else:
+                                            # Add suffix for additional images: image.png -> image_2.png, image_3.png
+                                            base, ext = os.path.splitext(self.custom_filename)
+                                            filename = f"{base}_{i+1}{ext}"
                                 else:
                                     filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
                                 
