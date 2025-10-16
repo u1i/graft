@@ -22,6 +22,11 @@ import re
 # Suppress SSL warnings when verify=False is used
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Models that don't support the temperature parameter
+MODELS_WITHOUT_TEMPERATURE = [
+    'openai/gpt-5-image',
+]
+
 
 class GraftConfig:
     """Handle configuration loading and validation."""
@@ -151,11 +156,15 @@ class GraftAPI:
             "content": user_content
         })
         
+        # Build request data
         data = {
             "model": self.config.model,
-            "messages": messages,
-            "temperature": self.config.temperature
+            "messages": messages
         }
+        
+        # Only include temperature if the model supports it
+        if self.config.model not in MODELS_WITHOUT_TEMPERATURE:
+            data["temperature"] = self.config.temperature
         
         # Setup proxy if configured
         proxies = {}
