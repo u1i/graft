@@ -2,7 +2,7 @@
 
 A command-line tool for AI-powered image generation and editing using OpenRouter API.
 
-Sister projects: [Glean](https://github.com/u1i/glean) (text analysis) and [Glimpse](https://github.com/u1i/glimpse) (image analysis)
+3G-CLI Suite: [Glean](https://github.com/u1i/glean) (text analysis) | [Glimpse](https://github.com/u1i/glimpse) (image analysis) | [Graft](https://github.com/u1i/graft) (image generation and editing)
 
 ## Installation
 
