@@ -175,7 +175,7 @@ class GraftAPI:
             }
         
         try:
-            response = requests.post(self.api_url, headers=headers, json=data, proxies=proxies, verify=False)
+            response = requests.post(self.api_url, headers=headers, json=data, proxies=proxies, verify=False, timeout=120)
             response.raise_for_status()
             
             result = response.json()
@@ -290,11 +290,49 @@ class GraftAPI:
                 print("Error: Unexpected API response format.")
                 return None
                 
+        except requests.exceptions.HTTPError as e:
+            # Handle specific HTTP errors with helpful messages
+            if response.status_code == 401:
+                print(f"❌ Authentication Error (401 Unauthorized)")
+                try:
+                    error_detail = response.json().get('error', {}).get('message', '')
+                    if error_detail:
+                        print(f"   {error_detail}")
+                except:
+                    pass
+                print(f"   → Check your API key in ~/.graft_cfg")
+                print(f"   → Verify your OpenRouter account is active at https://openrouter.ai/")
+                print(f"   → Make sure the API key hasn't been deactivated or revoked")
+            elif response.status_code == 402:
+                print(f"❌ Payment Required (402)")
+                print(f"   → Your OpenRouter account has insufficient credits")
+                print(f"   → Add credits at https://openrouter.ai/credits")
+            elif response.status_code == 429:
+                print(f"❌ Rate Limit Exceeded (429)")
+                print(f"   → Too many requests. Please wait and try again")
+            else:
+                print(f"Error making API request: {e}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Response: {error_detail}")
+                except:
+                    pass
+            return None
+        except requests.exceptions.Timeout:
+            print(f"❌ Request Timeout")
+            print(f"   → The API request took longer than 120 seconds")
+            print(f"   → Image generation can be slow, especially for complex prompts")
+            print(f"   → Try again or simplify your prompt")
+            return None
         except requests.exceptions.RequestException as e:
-            print(f"Error making API request: {e}")
+            print(f"❌ Network Error: {e}")
             return None
         except json.JSONDecodeError as e:
-            print(f"Error parsing API response: {e}")
+            print(f"❌ Invalid API Response")
+            print(f"   → The API returned malformed or incomplete data")
+            print(f"   → This can happen if the request timed out or was interrupted")
+            print(f"   → Technical details: {e}")
+            print(f"   → Try running the command again")
             return None
 
 
