@@ -79,13 +79,15 @@ class GraftAPI:
         self.config = config
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         self.models_url = "https://openrouter.ai/api/v1/models"
+        self.referer_override = None
         
     def generate_image(self, prompt_text, input_image_path=None, input_image_data=None):
         """Generate an image using the configured model."""
+        referer_header = self.referer_override or "https://github.com/u1i/graft"
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/u1i/graft",
+            "HTTP-Referer": referer_header,
             "X-Title": "Graft CLI Tool"
         }
         
@@ -187,6 +189,13 @@ class GraftAPI:
                 if 'images' in message and message['images']:
                     images = message['images']
                     
+                    default_filename = None
+                    default_base = None
+                    default_ext = '.png'
+                    if not (hasattr(self, 'custom_filename') and self.custom_filename):
+                        default_filename = generate_filename(prompt_text, self.config.model)
+                        default_base, default_ext = os.path.splitext(default_filename)
+                    
                     for i, image in enumerate(images):
                         if 'image_url' in image and 'url' in image['image_url']:
                             image_url = image['image_url']['url']
@@ -214,7 +223,10 @@ class GraftAPI:
                                             base, ext = os.path.splitext(self.custom_filename)
                                             filename = f"{base}_{i+1}{ext}"
                                 else:
-                                    filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
+                                    if i == 0:
+                                        filename = default_filename
+                                    else:
+                                        filename = f"{default_base}_{i+1}{default_ext}"
                                 
                                 if hasattr(self, 'custom_filename') and self.custom_filename == '-':
                                     # Already handled above
@@ -250,7 +262,10 @@ class GraftAPI:
                                             base, ext = os.path.splitext(self.custom_filename)
                                             filename = f"{base}_{i+1}{ext}"
                                 else:
-                                    filename = generate_filename(prompt_text) if i == 0 else generate_filename(prompt_text).replace('.png', f'_{i+1}.png')
+                                    if i == 0:
+                                        filename = default_filename
+                                    else:
+                                        filename = f"{default_base}_{i+1}{default_ext}"
                                 
                                 if hasattr(self, 'custom_filename') and self.custom_filename == '-':
                                     # Already handled above
@@ -273,7 +288,7 @@ class GraftAPI:
                 
                 if image_url:
                     # Generate filename and download image
-                    filename = generate_filename(prompt_text)
+                    filename = generate_filename(prompt_text, self.config.model)
                     print(f"Downloading image to: {filename}")
                     
                     if download_image(image_url, filename):
@@ -411,7 +426,19 @@ def extract_image_url(content):
     return image_urls[0] if image_urls else None
 
 
-def generate_filename(prompt_text):
+def sanitize_model_name(model_name):
+    """Sanitize model name for safe filename usage."""
+    if not model_name:
+        return "model"
+    
+    safe_model = re.sub(r'[^\w\s-]', '_', model_name)
+    safe_model = re.sub(r'[-\s]+', '_', safe_model)
+    safe_model = safe_model.strip('_')
+    
+    return safe_model[:40] if safe_model else "model"
+
+
+def generate_filename(prompt_text, model_name):
     """Generate a safe filename from the prompt text."""
     # Clean the prompt for filename
     safe_prompt = re.sub(r'[^\w\s-]', '', prompt_text)
@@ -421,7 +448,9 @@ def generate_filename(prompt_text):
     # Add timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    return f"graft_{timestamp}_{safe_prompt}.png"
+    safe_model = sanitize_model_name(model_name)
+    
+    return f"graft_{timestamp}_{safe_model}_{safe_prompt}.png"
 
 
 def get_cache_file_path():
@@ -549,6 +578,12 @@ Examples:
         action='store_true',
         help='List all available OpenRouter image generation models with detailed information'
     )
+    parser.add_argument(
+        '-x',
+        '--referer-override',
+        dest='referer_override',
+        help=argparse.SUPPRESS
+    )
     args = parser.parse_args()
     
     # Handle --list-models commands
@@ -620,6 +655,8 @@ Examples:
     
     # Set custom filename if provided
     api = GraftAPI(config)
+    if args.referer_override:
+        api.referer_override = args.referer_override
     if args.output:
         api.custom_filename = args.output
     

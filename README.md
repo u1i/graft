@@ -78,7 +78,7 @@ python3 graft.py --list-models
 - ✅ Multiple output images (saved as `image.png`, `image_2.png`, etc.)
 - ✅ Multiple image formats (PNG, JPEG, GIF, WebP, BMP)
 - ✅ Base64 image handling
-- ✅ Automatic filename generation with timestamps
+- ✅ Automatic filename generation with timestamps (now include sanitized model id: `graft_20260103_140500_google_gemini_25_flash_image_preview_A_sunset_over_mountains.png`)
 
 ## Supported Models
 
