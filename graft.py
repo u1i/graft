@@ -27,6 +27,42 @@ MODELS_WITHOUT_TEMPERATURE = [
     'openai/gpt-5-image',
 ]
 
+# Models that are available but missing from the API list
+FALLBACK_IMAGE_MODELS = [
+    {
+        'id': 'bytedance-seed/seedream-4.5',
+        'name': 'ByteDance Seed: Seedream 4.5',
+        'description': 'Latest in-house image generation model by ByteDance. Improved consistency, lighting, and small-text rendering.',
+        'context_length': 4096,
+        'pricing': {'prompt': '0', 'completion': '0.04 (per image)'},
+        'architecture': {'output_modalities': ['image']}
+    },
+    {
+        'id': 'black-forest-labs/flux-2-klein-4b',
+        'name': 'Black Forest Labs: FLUX.2 Klein 4B',
+        'description': 'Fastest and most cost-effective model in the FLUX.2 family. Optimized for high-throughput.',
+        'context_length': 41000,
+        'pricing': {'prompt': '0.24/M', 'completion': '0.24/M + $0.014/MP'},
+        'architecture': {'output_modalities': ['image']}
+    },
+    {
+        'id': 'black-forest-labs/flux-2-max',
+        'name': 'Black Forest Labs: FLUX.2 Max',
+        'description': 'Top-tier image model from Black Forest Labs. Highest image quality and prompt understanding.',
+        'context_length': 47000,
+        'pricing': {'prompt': '7.32/M', 'completion': '7.32/M + $0.07/MP'},
+        'architecture': {'output_modalities': ['image']}
+    },
+    {
+        'id': 'sourceful/riverflow-v2-max-preview',
+        'name': 'Sourceful: Riverflow V2 Max Preview',
+        'description': 'Most powerful variant of Sourceful Riverflow V2 family. Unified text-to-image and image-to-image.',
+        'context_length': 8000,
+        'pricing': {'prompt': '0', 'completion': '0.075 (per image)'},
+        'architecture': {'output_modalities': ['image']}
+    }
+]
+
 
 class GraftConfig:
     """Handle configuration loading and validation."""
@@ -516,6 +552,12 @@ def list_models(detailed=False):
             output_modalities = architecture.get('output_modalities', [])
             if 'image' in output_modalities:
                 image_models.append(model)
+        
+        # Add fallback models if not already present
+        existing_ids = {m['id'] for m in image_models}
+        for fallback_model in FALLBACK_IMAGE_MODELS:
+            if fallback_model['id'] not in existing_ids:
+                image_models.append(fallback_model)
         
         if detailed:
             print(f"Available OpenRouter Image Generation Models ({len(image_models)} total):")
